@@ -1,0 +1,356 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.awt.Graphics;
+
+public class Board implements KeyListener, ActionListener, Runnable {
+	JFrame bitFrame, shipSelect, intro;
+	JPanel bitPanel, top, bottom, shipPanel;
+	JButton scout, heavy, sniper, infantry, canShoot, multiplayerButton, singlePlayerButton, exitButton, hostButton,
+	joinButton, backToIntro, backToMultiplayer;
+	static JLabel health, enemyCount;
+	static JLabel[][] bitLabel;
+	static Color[][] bitColor;
+	static Object[][] objects;
+	static int rows = 200;
+	static int columns = 100;
+	static boolean keepMovingUp, keepMovingDown, keepMovingLeft, keepMovingRight, shoot, canRun;
+	static KeyEvent k;
+	static int enemeniesKilled, numEnemies, currentLevel;
+	static Spaceship s;
+	static ArrayList<Object> threads = new ArrayList<Object>();
+	int buttonX, buttonY;
+	boolean paused = false;
+	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
+	public Board(String title) {
+		makeSpace();
+		//makeIntroScreen();
+	}
+
+	public Board() {
+	}
+
+	public void makeIntroScreen() {
+		intro = new JFrame();
+		intro.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 20));
+		multiplayerButton = new JButton("Multiplayer");
+		singlePlayerButton = new JButton("Single Player");
+		exitButton = new JButton("Exit");
+		multiplayerButton.addActionListener(this);
+		exitButton.addActionListener(this);
+		singlePlayerButton.addActionListener(this);
+		intro.add(singlePlayerButton);
+		intro.add(multiplayerButton);
+		intro.add(exitButton);
+		intro.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		intro.setBackground(Color.WHITE);
+		intro.setPreferredSize(new Dimension(100, 300));
+		intro.setVisible(true);
+		intro.setLocationRelativeTo(null);
+		intro.pack();
+		intro.setResizable(true);
+	}
+
+	public void makeSelectionScreen() {
+		// URL file = null;
+		// file = new URL("/Users/RoseMac/Desktop/Heavy.png");
+		// ImageIcon icon = new ImageIcon(file);
+		shipSelect = new JFrame("Select");
+		shipPanel = new JPanel(new FlowLayout());
+		scout = new JButton("Scout");
+		heavy = new JButton("Heavy");
+		sniper = new JButton("Sniper");
+		infantry = new JButton("Infantry");
+		scout.addActionListener(this);
+		heavy.addActionListener(this);
+		sniper.addActionListener(this);
+		infantry.addActionListener(this);
+		shipPanel.add(scout);
+		shipPanel.add(heavy);
+		shipPanel.add(sniper);
+		shipPanel.add(infantry);
+		shipSelect.add(shipPanel);
+		shipSelect.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		shipSelect.setBackground(Color.WHITE);
+		shipSelect.addKeyListener(this);
+		shipSelect.setPreferredSize(new Dimension(350, 100));
+		shipSelect.setVisible(true);
+		shipSelect.setLocation(20, 50);
+		shipSelect.pack();
+		shipSelect.setResizable(true);
+	}
+
+	public void makeSpace() {
+		//intro.dispatchEvent(new WindowEvent(intro, WindowEvent.WINDOW_CLOSING));
+		bitFrame = new JFrame("Bit Space");
+		bitPanel = new JPanel(new GridLayout(columns, rows));
+		top = new JPanel();
+		bottom = new JPanel(new GridLayout(1, 7));
+		objects = new Object[columns][rows];
+		bitLabel = new JLabel[columns][rows];
+		bitColor = new Color[columns][rows];
+		for (int j = 0; j < columns; j++) {
+			for (int o = 0; o < rows; o++) {
+				bitLabel[j][o] = new JLabel();
+				bitColor[j][o] = new Color(180 - j, 50, 2 + j);
+				bitLabel[j][o].setBackground(bitColor[j][o]);
+				bitLabel[j][o].addKeyListener(this);
+				bitLabel[j][o].setOpaque(true);
+				bitPanel.add(bitLabel[j][o]);
+			}
+		}
+		bitPanel.setBackground(Color.BLACK);
+		s = new Spaceship(0, 50, 30);
+		threads.add(s);
+		s.start();
+		levelOne();
+		health = new JLabel("Health " + s.health);
+		enemyCount = new JLabel("Enemies Left " + numEnemies);
+		// bitFrame.add(top, BorderLayout.PAGE_START);
+		bitFrame.add(bitPanel);
+		// bottom.add(new JLabel("Ship Model 1"));
+		// bottom.add(new JLabel("Gun Model 1"));
+		bottom.add(health);
+		bottom.add(enemyCount);
+		bitFrame.add(bottom, BorderLayout.AFTER_LAST_LINE);
+		bitFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		bitFrame.setBackground(Color.WHITE);
+		bitFrame.addKeyListener(this);
+		bitFrame.setPreferredSize(new Dimension(1200, 600));
+		bitFrame.setVisible(true);
+		Graphics graphics = bitFrame.getGraphics();
+		graphics.setColor(Color.GREEN);
+		graphics.fillRect(0, 0, 50, 10);
+		bitFrame.repaint();
+		bitFrame.setLocation(20, 50);
+		bitFrame.pack();
+		bitFrame.setResizable(true);
+		canRun = true;
+	}
+
+	public void levelOne() {
+		currentLevel = 1;
+		numEnemies = 10;
+		for (int j = 0; j < 10; j++) {
+			Enemy e = new Enemy(0, (j * 10) + 7, 180);
+			threads.add(e);
+			e.start();
+		}
+	}
+
+	public static void levelTwo() {
+		try {
+			for (int j = 0; j < columns; j++) {
+				for (int o = 0; o < rows; o++) {
+					bitColor[j][o] = new Color(j, 200 - j, 100 + j);
+					bitLabel[j][o].setBackground(bitColor[j][o]);
+					objects[j][o] = null;
+				}
+			}
+			Thread.sleep(500);
+			numEnemies = 20;
+			s.move(50, 30);
+			s.alive = true;
+			for (int j = 0; j < 10; j++) {
+				Enemy e = new Enemy(0, (j * 10) + 7, 180);
+				threads.add(e);
+				e.start();
+			}
+			for (int j = 0; j < 10; j++) {
+				Enemy e = new Enemy(0, (j * 10) + 7, 160);
+				threads.add(e);
+				e.start();
+			}
+		}
+		catch (InterruptedException x) {
+		}
+	}
+
+	public static void nextLevel() {
+		clearObjects();
+		s.alive = false;
+		enemeniesKilled = 0;
+		if(currentLevel == 1)
+			levelTwo();
+		currentLevel++;
+	}
+
+	public void updateBitColor() {
+		for (int j = 0; j < columns; j++) {
+			for (int o = 0; o < rows; o++) {
+				bitLabel[j][o].setBackground(bitColor[j][o]);
+			}
+		}
+	}
+
+	public void changeBitColor(int x, int y, Color aileen) {
+		bitColor[x][y] = aileen;
+	}
+
+	public static void main(String[] args) {
+		Thread.currentThread().setPriority((int) (Thread.MAX_PRIORITY * 0.8));
+		Board b = new Board(" ");
+		Thread t = new Thread(b);
+		t.start();
+	}
+
+	public void keyPressed(KeyEvent arg0) {
+		if(arg0.getKeyChar() == 'w') {
+			keepMovingUp = true;
+			k = arg0;
+		}
+		if(arg0.getKeyChar() == 'd') {
+			keepMovingRight = true;
+			k = arg0;
+		}
+		if(arg0.getKeyChar() == 's') {
+			keepMovingDown = true;
+			k = arg0;
+		}
+		if(arg0.getKeyChar() == 'a') {
+			keepMovingLeft = true;
+			k = arg0;
+		}
+		if(arg0.getKeyChar() == ' ') {
+			shoot = true;
+		}
+		// if(arg0.getKeyChar() == KeyEvent.VK_ESCAPE) {
+		// if(!paused) {
+		// try {
+		// pause();
+		// }
+		// catch (InterruptedException e) {
+		// System.out.println("exception");
+		// }
+		// }
+		// }
+		// else {
+		// try {
+		// notifyAll();
+		// unpause();
+		// }
+		// catch (InterruptedException e) {
+		// }
+		// }
+	}
+
+	public void keyReleased(KeyEvent arg0) {
+		if(arg0.getKeyChar() == 'w') {
+			keepMovingUp = false;
+		}
+		if(arg0.getKeyChar() == 'd') {
+			keepMovingRight = false;
+		}
+		if(arg0.getKeyChar() == 's') {
+			keepMovingDown = false;
+		}
+		if(arg0.getKeyChar() == 'a') {
+			keepMovingLeft = false;
+		}
+		if(arg0.getKeyChar() == ' ') {
+			shoot = false;
+		}
+	}
+
+	public void keyTyped(KeyEvent arg0) {
+	}
+	public void makeMultiplayer() {
+		intro.remove(singlePlayerButton);
+		intro.remove(multiplayerButton);
+		intro.remove(exitButton);
+
+		hostButton = new JButton("Host Game");
+		joinButton = new JButton("Join Game");
+		backToIntro = new JButton("Back");
+
+		hostButton.addActionListener(this);
+		joinButton.addActionListener(this);
+		backToIntro.addActionListener(this);
+
+		intro.add(hostButton);
+		intro.add(joinButton);
+		intro.add(backToIntro);
+		intro.add(exitButton);
+
+		intro.pack();
+		intro.repaint();
+	}
+
+	public void actionPerformed(ActionEvent arg0) {
+		if(arg0.getSource() == backToIntro) {
+			intro.dispatchEvent(new WindowEvent(intro, WindowEvent.WINDOW_CLOSING));
+			makeIntroScreen();
+		}
+		if(arg0.getSource() == joinButton)
+			joinGame();
+		if(arg0.getSource() == hostButton)
+			hostGame();
+		if(arg0.getSource() == exitButton)
+			System.exit(0);
+		if(arg0.getSource() == singlePlayerButton)
+			makeSpace();
+		if(arg0.getSource() == multiplayerButton)
+			makeMultiplayer();
+		//if(arg0.getSource() == scout)
+		//makeSpace(1);
+		//if(arg0.getSource() == heavy)
+		//makeSpace(4);
+		//if(arg0.getSource() == sniper)
+		//makeSpace(2);
+		//if(arg0.getSource() == infantry)
+		//makeSpace(0);
+	}
+	public void joinGame() {
+
+	}
+	public void hostGame() {
+
+	}
+	public static void clearObjects() {
+		for (int j = 0; j < columns; j++) {
+			for (int o = 0; o < rows; o++) {
+				if(objects[j][o] instanceof Bullet) {
+					((Bullet) objects[j][o]).alive = false;
+				}
+			}
+		}
+	}
+
+	public void pause() throws InterruptedException {
+		try {
+			System.out.println(threads.size());
+			for (Object j: threads) {
+				synchronized (j) {
+					System.out.println(j);
+					j.wait();
+				}
+			}
+			paused = false;
+		}
+		catch (NumberFormatException x) {
+		}
+	}
+
+	public void unpause() throws InterruptedException {
+		try {
+			for (int j = 0; j < threads.size(); j++) {
+				synchronized (threads.get(j)) {
+					threads.get(j).notify();
+				}
+			}
+			paused = true;
+		}
+		catch (NumberFormatException x) {
+		}
+	}
+
+	public void run() {
+		while (true) {
+		}
+	}
+}
