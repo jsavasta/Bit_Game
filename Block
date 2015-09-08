@@ -1,0 +1,10 @@
+import java.awt.Color;
+public class Block extends Thread {
+	int x, y, health, length;
+	boolean alive;
+	public Block(int x, int y) {
+		this.x = x;
+		this.y = y;
+		health = 1000;
+	}
+}
