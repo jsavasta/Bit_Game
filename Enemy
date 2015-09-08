@@ -1,0 +1,279 @@
+import java.awt.Color;
+import java.lang.Math;
+import java.util.Arrays;
+
+public class Enemy extends Thread {
+	int design, movement, startX, startY, shoot;
+	public int health;
+	int[] x, y;
+	boolean alive, canMove;
+	int[] x1 = { 0, 1, 1, 1 };
+	int[] y1 = { 1, 0, 1, 2 };
+	int[] incorrectPlaces = new int[4];
+	int shootX, shootY;
+
+	public Enemy(int design, int startX, int startY) {
+		this.startX = startX;
+		this.startY = startY;
+		alive = true;
+		this.design = design;
+		if(design == 0) {
+			x = Arrays.copyOf(x1, x1.length);
+			y = Arrays.copyOf(y1, x1.length);
+			health = 10;
+		}
+		createShip();
+	}
+
+	public void run() {
+		while (alive) {
+			//if(Board.canRun) {
+			if(design == 0) {
+				movement = (int) (Math.random() * 4);
+				shoot = (int) (Math.random() * 50);
+				try {
+					shootX = x[0];
+					shootY = y[0];
+					if(shoot < 2) {
+						Bullet b = new Bullet(shootX, shootY, 1);
+						Board.threads.add(b);
+						b.start();
+					}
+					canMove = true;
+					switch (movement) {
+						case 0:
+							if(incorrectPlaces()[0] != 0) {
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[0] - 1 != 0) {
+										if(Board.objects[y[j] - 1][x[j]] instanceof Spaceship) {
+											canMove = false;
+											health = 0;
+											((Spaceship) Board.objects[y[j] - 1][x[j]]).health = 0;
+										}
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[0] - 1 != 0) {
+										if(Board.objects[y[j] - 1][x[j]] instanceof Enemy
+												&& Board.objects[y[j] - 1][x[j]] != this)
+											canMove = false;
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(!(incorrectPlaces()[0] - 2 <= 0)) {
+										if(Board.objects[y[j] - 2][x[j]] instanceof Enemy
+												&& Board.objects[y[j] - 2][x[j]] != this)
+											canMove = false;
+									}
+								}
+								if(canMove) {
+									for (int j = 0; j < x.length; j++) {
+										if(incorrectPlaces()[0] - 1 != 0) {
+											if(Board.objects[y[j] - 1][x[j]] instanceof Bullet)
+												((Bullet) Board.objects[y[j] - 1][x[j]]).end();
+										}
+									}
+									for (int j = 0; j < x.length; j++) {
+										Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+										Board.objects[y[j]][x[j]] = null;
+									}
+									for (int j = 0; j < x.length; j++) {
+										y[j] -= 1;
+										Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+										Board.objects[y[j]][x[j]] = this;
+									}
+								}
+							}
+							break;
+						case 1:
+							if(incorrectPlaces()[2] != Board.columns - 1) {
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[2] + 1 != Board.columns - 1) {
+										if(Board.objects[y[j] + 1][x[j]] instanceof Spaceship) {
+											canMove = false;
+											health = 0;
+											((Spaceship) Board.objects[y[j] + 1][x[j]]).health = 0;
+										}
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[2] + 1 != Board.columns - 1) {
+										if(Board.objects[y[j] + 1][x[j]] instanceof Enemy
+												&& Board.objects[y[j] + 1][x[j]] != this)
+											canMove = false;
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(!(incorrectPlaces()[2] + 2 >= Board.columns)) {
+										if(Board.objects[y[j] + 2][x[j]] instanceof Enemy
+												&& Board.objects[y[j] + 2][x[j]] != this)
+											canMove = false;
+									}
+								}
+								if(canMove) {
+									for (int j = 0; j < x.length; j++) {
+										if(incorrectPlaces()[2] + 1 != Board.columns - 1) {
+											if(Board.objects[y[j] + 1][x[j]] instanceof Bullet)
+												((Bullet) Board.objects[y[j] + 1][x[j]]).end();
+										}
+									}
+									for (int j = 0; j < x.length; j++) {
+										Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+										Board.objects[y[j]][x[j]] = null;
+									}
+									for (int j = 0; j < x.length; j++) {
+										y[j] += 1;
+										Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+										Board.objects[y[j]][x[j]] = this;
+									}
+								}
+							}
+							break;
+						case 2:
+							if(incorrectPlaces()[1] != 0) {
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[1] - 1 != 0) {
+										if(Board.objects[y[j]][x[j] - 1] instanceof Spaceship) {
+											canMove = false;
+											health = 0;
+											((Spaceship) Board.objects[y[j]][x[j] - 1]).health = 0;
+										}
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[1] - 1 != 0) {
+										if(Board.objects[y[j]][x[j] - 1] instanceof Enemy
+												&& Board.objects[y[j]][x[j] - 1] != this)
+											canMove = false;
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(!(incorrectPlaces()[1] - 2 <= 0)) {
+										if(Board.objects[y[j]][x[j] - 2] instanceof Enemy
+												&& Board.objects[y[j]][x[j] - 2] != this)
+											canMove = false;
+									}
+								}
+								if(canMove) {
+									for (int j = 0; j < x.length; j++) {
+										if(incorrectPlaces()[1] - 1 != 0) {
+											if(Board.objects[y[j]][x[j] - 1] instanceof Bullet)
+												((Bullet) Board.objects[y[j]][x[j] - 1]).end();
+										}
+									}
+									for (int j = 0; j < x.length; j++) {
+										Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+										Board.objects[y[j]][x[j]] = null;
+									}
+									for (int j = 0; j < x.length; j++) {
+										x[j] -= 1;
+										Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+										Board.objects[y[j]][x[j]] = this;
+									}
+								}
+							}
+							break;
+						case 3:
+							if(incorrectPlaces()[3] != Board.rows - 1) {
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[3] + 1 != Board.rows - 1) {
+										if(Board.objects[y[j]][x[j] + 1] instanceof Spaceship) {
+											canMove = false;
+											health = 0;
+											((Spaceship) Board.objects[y[j]][x[j] - 1]).health = 0;
+										}
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(incorrectPlaces()[3] + 1 != Board.rows - 1) {
+										if(Board.objects[y[j]][x[j] + 1] instanceof Enemy
+												&& Board.objects[y[j]][x[j] + 1] != this)
+											canMove = false;
+									}
+								}
+								for (int j = 0; j < x.length; j++) {
+									if(!(incorrectPlaces()[3] + 2 >= Board.rows)) {
+										if(Board.objects[y[j]][x[j] + 2] instanceof Enemy
+												&& Board.objects[y[j]][x[j] + 2] != this)
+											canMove = false;
+									}
+								}
+								if(canMove) {
+									for (int j = 0; j < x.length; j++) {
+										if(incorrectPlaces()[3] + 1 != Board.rows - 1) {
+											if(Board.objects[y[j]][x[j] + 1] instanceof Bullet)
+												((Bullet) Board.objects[y[j]][x[j] + 1]).end();
+										}
+									}
+									for (int j = 0; j < x.length; j++) {
+										Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+										Board.objects[y[j]][x[j]] = null;
+									}
+									for (int j = 0; j < x.length; j++) {
+										x[j] += 1;
+										Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+										Board.objects[y[j]][x[j]] = this;
+									}
+								}
+							}
+							break;
+						default:
+							break;
+					}
+					Thread.sleep(90);
+				}
+				catch (InterruptedException x) {
+					System.out.println(x);
+				}
+				// catch (IndexOutOfBoundsException x) {
+					// hold();
+					// }
+				if(health <= 0) {
+					alive = false;
+					for (int j = 0; j < x.length; j++) {
+						Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+						Board.objects[y[j]][x[j]] = null;
+					}
+				}
+			}
+			//}
+		}
+	}
+
+	public void createShip() {
+		for (int j = 0; j < x.length; j++) {
+			y[j] += startX;
+			x[j] += startY;
+			Board.objects[y[j]][x[j]] = this;
+			Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+		}
+	}
+
+	public void hold() {
+		for (int j = 0; j < x.length; j++) {
+			y[j] += startX;
+			x[j] += startY;
+			Board.objects[y[j]][x[j]] = this;
+			Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+		}
+	}
+
+	public int[] incorrectPlaces() {
+		int[] places = new int[4];
+		if(design == 0) {
+			places[0] = y[1];
+			places[1] = x[0];
+			places[2] = y[3];
+			places[3] = x[2];
+		}
+		return places;
+	}
+
+	public int[] getX() {
+		return x;
+	}
+
+	public int[] getY() {
+		return y;
+	}
+}
