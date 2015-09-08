@@ -1,0 +1,230 @@
+import java.awt.Color;
+import java.util.Arrays;
+
+public class Spaceship extends Thread {
+	int[] x, y;
+	int shootX, shootY, startX, startY;
+	int design;
+	int reload, reloadTime, speed, shotSpot;
+	public int health;
+	boolean alive = true;
+
+	public Spaceship() {
+	}
+
+	public Spaceship(int design, int startX, int startY) {
+		this.design = design;
+		this.startX = startX;
+		this.startY = startY;
+		if(design == 4) {
+			x = Arrays.copyOf(x2, x2.length);
+			y = Arrays.copyOf(y2, x2.length);
+			reloadTime = 1;
+			health = 500;
+			speed = 250;
+		}
+		if(design == 2) {
+			x = Arrays.copyOf(x3, x3.length);
+			y = Arrays.copyOf(y3, x3.length);
+			reloadTime = 20;
+			health = 100;
+			speed = 100;
+			shotSpot = 23;
+		}
+		if(design == 1) {
+			x = Arrays.copyOf(x4, x4.length);
+			y = Arrays.copyOf(y4, x4.length);
+			reloadTime = 100;
+			health = 75;
+			speed = 20;
+			shotSpot = 5;
+		}
+		if(design == 0) {
+			x = Arrays.copyOf(x1, x1.length);
+			y = Arrays.copyOf(y1, x1.length);
+			reloadTime = 3;
+			health = 100;
+			speed = 100;
+			shotSpot = 23;
+		}
+		createShip();
+		reload = reloadTime;
+	}
+
+	int[] x1 = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3 };
+	int[] y1 = { 0, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, };
+	int[] x2 = { 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6 };
+	int[] y2 = { 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 3, 2, 3, 4, 2, 4, 1, 5, 1, 5, };
+	int[] x3 = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 7 };
+	int[] y3 = { 1, 2, 3, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 2, 2 };
+	int[] x4 = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3 };
+	int[] y4 = { 1, 2, 3, 0, 2, 4, 1, 2, 3, 2 };
+
+	public void run() {
+		while (alive) { 
+			//if (Board.canRun) {
+			if(Board.enemeniesKilled == Board.numEnemies)
+				Board.nextLevel();
+			try {
+				if(Board.keepMovingUp && incorrectPlaces()[0] != 0) {
+					for (int j = 0; j < x.length; j++) {
+						Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+						Board.objects[y[j]][x[j]] = null;
+					}
+					for (int j = 0; j < x.length; j++) {
+						y[j] -= 1;
+						Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+						Board.objects[y[j]][x[j]] = this;
+					}
+				}
+				if(Board.keepMovingDown && incorrectPlaces()[2] != Board.columns - 1) {
+					for (int j = 0; j < x.length; j++) {
+						Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+						Board.objects[y[j]][x[j]] = null;
+					}
+					for (int j = 0; j < x.length; j++) {
+						y[j] += 1;
+						Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+						Board.objects[y[j]][x[j]] = this;
+					}
+				}
+				if(Board.keepMovingLeft && incorrectPlaces()[1] != 0) {
+					for (int j = 0; j < x.length; j++) {
+						Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+						Board.objects[y[j]][x[j]] = null;
+					}
+					for (int j = 0; j < x.length; j++) {
+						x[j] -= 1;
+						Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+						Board.objects[y[j]][x[j]] = this;
+					}
+				}
+				if(Board.keepMovingRight && incorrectPlaces()[3] != Board.rows - 1) {
+					for (int j = 0; j < x.length; j++) {
+						Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+						Board.objects[y[j]][x[j]] = null;
+					}
+					for (int j = 0; j < x.length; j++) {
+						x[j] += 1;
+						Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+						Board.objects[y[j]][x[j]] = this;
+					}
+				}
+				if(Board.shoot && reload >= reloadTime) {
+					if(design == 1) {
+						Bullet b = new Bullet(x[shotSpot], y[shotSpot], 3);
+						Board.threads.add(b);
+						b.start();
+						reload = 0;
+					}
+					else if(design == 4) {
+						Bullet b = new Bullet(x[23], y[23], 0);
+						Board.threads.add(b);
+						b.start();
+						Bullet b1 = new Bullet(x[22], y[22], 0);
+						Board.threads.add(b1);
+						b1.start();
+						reload = 0;
+					}
+					else if(design == 2) {
+						Bullet b = new Bullet(x[23], y[23], 2);
+						Board.threads.add(b);
+						b.start();
+						reload = 0;
+					}
+					else {
+						shootX = x[shotSpot];
+						shootY = y[shotSpot];
+						Bullet b = new Bullet(shootX, shootY, 0);
+						Board.threads.add(b);
+						b.start();
+						reload = 0;
+					}
+				}
+				Thread.sleep(speed);
+			}
+			catch (InterruptedException x) {
+			}
+			reload++;
+			if(health <= 0) {
+				for (int j = 0; j < x.length; j++) {
+					alive = false;
+					Board.bitLabel[y[j]][x[j]].setBackground(Board.bitColor[y[j]][x[j]]);
+					Board.objects[y[j]][x[j]] = null;
+				}
+			}
+			//}
+		}
+	}
+
+	public int[] incorrectPlaces() {
+		int[] places = new int[4];
+		if(design == 1) {
+			places[0] = y[3];
+			places[1] = x[0];
+			places[2] = y[5];
+			places[3] = x[9];
+		}
+		if(design == 0) {
+			places[0] = y[0];
+			places[1] = x[0];
+			places[2] = y[7];
+			places[3] = x[23];
+		}
+		if(design == 4) {
+			places[0] = y[0];
+			places[1] = x[0];
+			places[2] = y[23];
+			places[3] = x[23];
+		}
+		if(design == 2) {
+			places[0] = y[0];
+			places[1] = x[0];
+			places[2] = y[10];
+			places[3] = x[23];
+		}
+		return places;
+	}
+
+	public void createShip() {
+		for (int j = 0; j < x.length; j++) {
+			y[j] += startX;
+			x[j] += startY;
+			Board.objects[y[j]][x[j]] = this;
+			Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+		}
+	}
+
+	public int[] getX() {
+		return x;
+	}
+
+	public void move(int movex, int movey) {
+		if(design == 0) {
+			x = Arrays.copyOf(x1, x1.length);
+			y = Arrays.copyOf(y1, x1.length);
+		}
+		if(design == 4) {
+			x = Arrays.copyOf(x2, x2.length);
+			y = Arrays.copyOf(y2, x2.length);
+		}
+		if(design == 2) {
+			x = Arrays.copyOf(x3, x3.length);
+			y = Arrays.copyOf(y3, x3.length);
+		}
+		if(design == 1) {
+			x = Arrays.copyOf(x4, x4.length);
+			y = Arrays.copyOf(y4, x4.length);
+		}
+		for (int j = 0; j < x.length; j++) {
+			y[j] += movex;
+			x[j] += movey;
+			Board.objects[y[j]][x[j]] = this;
+			Board.bitLabel[y[j]][x[j]].setBackground(Color.BLACK);
+		}
+	}
+
+	public int[] getY() {
+		return y;
+	}
+}
