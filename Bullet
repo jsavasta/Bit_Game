@@ -1,0 +1,279 @@
+import java.awt.Color;
+
+public class Bullet extends Thread {
+	public int x, y, type, speed, damage;
+	boolean alive;
+
+	public Bullet(int x, int y, int type) {
+		this.type = type;
+		this.x = x;
+		this.y = y;
+		alive = true;
+		if(type == 0 || type == 1 || type == 4) {
+			speed = 50;
+			damage = 10;
+		}
+		if(type == 2) {
+			speed = 5;
+			damage = 50;
+		}
+		if(type == 3) {
+			speed = 70;
+			damage = 30;
+		}
+	}
+
+	public void run() {
+		try {
+			if(type == 3) {
+				for (int j = y; j < Board.columns - 2; j++) {
+					if(Board.objects[j + 1][x] instanceof Bullet) {
+						int holder = damage;
+						Bullet bullet = ((Bullet) Board.objects[j + 1][x]);
+						damage -= bullet.damage;
+						if(Board.objects[j + 1][x] != null) {
+							bullet.damage -= holder;
+							if(bullet.damage <= 0)
+								bullet.end();
+						}
+						if(damage <= 0) {
+							end();
+							return;
+						}
+					}
+					if(Board.objects[j + 1][x] instanceof Enemy) {
+						((Enemy) Board.objects[j + 1][x]).health -= damage;
+						end();
+						Board.enemeniesKilled++;
+						Board.enemyCount.setText("Enemies Left " + (Board.numEnemies - Board.enemeniesKilled));
+						return;
+					}
+					if(Board.objects[j + 1][x] instanceof Spaceship) {
+						end();
+						return;
+					}
+					Board.bitLabel[j][x].setBackground(Color.BLACK);
+					Board.objects[j][x] = this;
+					Thread.sleep(speed);
+					Board.bitLabel[j][x].setBackground(Board.bitColor[j][x]);
+					Board.objects[j][x] = null;
+				}
+				Board.bitLabel[Board.columns - 1][x].setBackground(Color.BLACK);
+				Board.objects[Board.columns - 1][x] = this;
+				int timeAlive = 0;
+				while (alive && timeAlive <= 20) {
+					if(Board.objects[y][x] instanceof Bullet) {
+						int holder = damage;
+						Bullet bullet = ((Bullet) Board.objects[y][x]);
+						damage -= bullet.damage;
+						if(Board.objects[y][x] != null) {
+							bullet.damage -= holder;
+							if(bullet.damage <= 0)
+								bullet.end();
+						}
+						if(damage <= 0) {
+							end();
+							return;
+						}
+					}
+					if(Board.objects[y][x] instanceof Enemy) {
+						((Enemy) Board.objects[y][x]).health -= damage;
+						end();
+						Board.enemeniesKilled++;
+						Board.enemyCount.setText("Enemies Left " + (Board.numEnemies - Board.enemeniesKilled));
+						return;
+					}
+					if(Board.objects[y][x] instanceof Spaceship) {
+						end();
+						return;
+					}
+					Bullet b = new Bullet(x, Board.columns - 1, 4);
+					Board.threads.add(b);
+					b.start();
+					Thread.sleep(2000);
+					timeAlive++;
+				}
+				Board.bitLabel[Board.columns - 1][x].setBackground(Board.bitColor[Board.columns - 1][x]);
+				Board.objects[Board.columns - 1][x] = null;
+			}
+			if(type == 0 || type == 2) {
+				Board.bitLabel[y][x + 1].setBackground(Color.BLACK);
+				Board.objects[y][x + 1] = this;
+				Board.bitLabel[y][x + 2].setBackground(Color.BLACK);
+				Board.objects[y][x + 2] = this;
+				x++;
+				Thread.sleep(speed);
+				while (x + 2 < Board.rows && alive) {
+					if(Board.objects[y][x + 2] instanceof Bullet) {
+						int holder = damage;
+						Bullet bullet = ((Bullet) Board.objects[y][x + 2]);
+						damage -= bullet.damage;
+						if(Board.objects[y][x + 2] != null) {
+							bullet.damage -= holder;
+							if(bullet.damage <= 0)
+								bullet.end();
+						}
+						if(damage <= 0) {
+							end();
+							return;
+						}
+					}
+					if(Board.objects[y][x + 2] instanceof Enemy) {
+						((Enemy) Board.objects[y][x + 2]).health -= 10;
+						end();
+						Board.enemeniesKilled++;
+						Board.enemyCount.setText("Enemies Left " + (Board.numEnemies - Board.enemeniesKilled));
+						return;
+					}
+					Board.bitLabel[y][x + 2].setBackground(Color.BLACK);
+					Board.objects[y][x + 2] = this;
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+					x++;
+					Thread.sleep(speed);
+				}
+				if(alive) {
+					Board.bitLabel[y][x + 1].setBackground(Color.BLACK);
+					Board.objects[y][x + 1] = this;
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+					x++;
+					Thread.sleep(speed);
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+				}
+			}
+			if(type == 1) {
+				Board.bitLabel[y][x - 1].setBackground(Color.BLACK);
+				Board.objects[y][x - 1] = this;
+				Board.bitLabel[y][x - 2].setBackground(Color.BLACK);
+				Board.objects[y][x - 2] = this;
+				x--;
+				Thread.sleep(speed);
+				while (x - 2 >= 0 && alive) {
+					if(Board.objects[y][x - 2] instanceof Bullet) {
+						int holder = damage;
+						Bullet bullet = ((Bullet) Board.objects[y][x - 2]);
+						damage -= bullet.damage;
+						if(Board.objects[y][x - 2] != null) {
+							bullet.damage -= holder;
+							if(bullet.damage <= 0)
+								bullet.end();
+						}
+						if(damage <= 0)
+							end();
+						return;
+					}
+					if(Board.objects[y][x - 2] instanceof Enemy)
+						end();
+					if(Board.objects[y][x - 2] instanceof Spaceship) {
+						((Spaceship) Board.objects[y][x - 2]).health -= damage;
+						Board.health.setText("Health " + ((Spaceship) Board.objects[y][x - 2]).health);
+						end();
+						return;
+					}
+					Board.bitLabel[y][x - 2].setBackground(Color.BLACK);
+					Board.objects[y][x - 2] = this;
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+					x--;
+					Thread.sleep(speed);
+				}
+				if(alive) {
+					Board.bitLabel[y][x - 1].setBackground(Color.BLACK);
+					Board.objects[y][x - 1] = this;
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+					x--;
+					Thread.sleep(speed);
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+				}
+			}
+			if(type == 4) {
+				Board.bitLabel[y - 1][x].setBackground(Color.BLACK);
+				Board.objects[y - 1][x] = this;
+				Board.bitLabel[y - 2][x].setBackground(Color.BLACK);
+				Board.objects[y - 2][x] = this;
+				y--;
+				Thread.sleep(speed);
+				while (y - 2 >= 0 && alive) {
+					if(Board.objects[y - 2][x] instanceof Bullet) {
+						int holder = damage;
+						Bullet bullet = ((Bullet) Board.objects[y - 2][x]);
+						damage -= bullet.damage;
+						if(Board.objects[y - 2][x] != null) {
+							bullet.damage -= holder;
+							if(bullet.damage <= 0) 
+								bullet.end();
+						}
+						if(damage <= 0) {
+							end();
+							return;
+						}
+					}
+					if(Board.objects[y - 2][x] instanceof Enemy) {
+						((Enemy) Board.objects[y - 2][x]).health -= damage;
+						end();
+						Board.enemeniesKilled++;
+						Board.enemyCount.setText("Enemies Left " + (Board.numEnemies - Board.enemeniesKilled));
+						return;
+					}
+					if(Board.objects[y - 2][x] instanceof Spaceship) {
+						end();
+						return;
+					}
+					Board.bitLabel[y - 2][x].setBackground(Color.BLACK);
+					Board.objects[y - 2][x] = this;
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+					y--;
+					Thread.sleep(speed);
+				}
+				if(alive) {
+					Board.bitLabel[y - 1][x].setBackground(Color.BLACK);
+					Board.objects[y - 1][x] = this;
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+					y--;
+					Thread.sleep(speed);
+					Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+					Board.objects[y][x] = null;
+				}
+			}
+		}
+		catch (InterruptedException x) {
+		}
+	}
+
+	public void end() {
+		if(this.type == 0 || type == 2) {
+			Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+			Board.objects[y][x] = null;
+			Board.bitLabel[y][x + 1].setBackground(Board.bitColor[y][x]);
+			Board.objects[y][x + 1] = null;
+		}
+		if(this.type == 3) {
+			Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+			Board.objects[y][x] = null;
+		}
+		if(this.type == 4) {
+			Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+			Board.objects[y][x] = null;
+			Board.bitLabel[y - 1][x].setBackground(Board.bitColor[y][x]);
+			Board.objects[y - 1][x] = null;
+		}
+		if(this.type == 1) {
+			Board.bitLabel[y][x].setBackground(Board.bitColor[y][x]);
+			Board.objects[y][x] = null;
+			Board.bitLabel[y][x - 1].setBackground(Board.bitColor[y][x]);
+			Board.objects[y][x - 1] = null;
+		}
+		alive = false;
+		return;
+	}
+
+	public int getType() {
+		return this.type;
+	}
+}
